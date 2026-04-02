@@ -5,6 +5,8 @@ public class FallingFruit : MonoBehaviour
     public float fallSpeed = 2.5f;
     public float lifetime = 4f;
     public float spinSpeed = 90f;
+    public AudioSource landSoundSource;
+    public float landSoundVolume = 0.7f;
 
     private bool hasLanded = false;
     private float elapsed = 0f;
@@ -47,6 +49,17 @@ public class FallingFruit : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        if (hasLanded) return;
         hasLanded = true;
+
+        if (landSoundSource != null)
+        {
+            landSoundSource.transform.position = transform.position;
+            landSoundSource.volume = landSoundVolume;
+            landSoundSource.spatialBlend = 1f; // 3D spatial
+            landSoundSource.minDistance = 1f;
+            landSoundSource.maxDistance = 15f;
+            landSoundSource.Play();
+        }
     }
 }

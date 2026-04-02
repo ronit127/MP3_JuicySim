@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.XR;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine.UI;
 
@@ -14,6 +16,9 @@ public class PowerUpStationScript : MonoBehaviour
     public int maxPurchases = 5;
     private int purchases = 0;
     private float cumulativeMultiplier = 1f;
+
+    public AudioSource powerUpAudioSource;
+    public ParticleSystem powerUpParticles;
 
     private AppleTreeStation[] cachedAppleTrees;
     private OrangeTreeStationScript[] cachedOrangeTrees;
@@ -64,9 +69,33 @@ public class PowerUpStationScript : MonoBehaviour
             purchases++;
 
             buttonText.text = purchases >= maxPurchases ? "Sold Out!" : "Boost: " + (int)price + " apples";
+
+            if (powerUpParticles != null)
+                powerUpParticles.Play();
+
+            if (powerUpAudioSource != null)
+                powerUpAudioSource.Play();
+
+            PlayHaptic();
         }
 
         CheckButtonStatus();
+    }
+
+    void PlayHaptic()
+    {
+        var devices = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(
+            InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller,
+            devices);
+
+        foreach (var device in devices)
+        {
+            if (device.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+            {
+                device.SendHapticImpulse(0, 0.6f, 0.15f);
+            }
+        }
     }
     
     void CheckButtonStatus()

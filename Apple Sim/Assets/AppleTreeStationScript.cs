@@ -30,6 +30,8 @@ public class AppleTreeStation : MonoBehaviour
     private float fruitSpawnTimer = 0f;
     private const float MinSpawnInterval = 0.5f;
 
+    public ParticleSystem particles;
+
     public void Start()
     {
         treeVisual.gameObject.SetActive(false);
@@ -39,9 +41,30 @@ public class AppleTreeStation : MonoBehaviour
         CheckButtonStatus();
     }
 
+    void UpdateParticleRate()
+    {
+        if (particles == null) return;
+        var emission = particles.emission;
+        if (!isOwned)
+        {
+            emission.rateOverTime = 0f;
+            return;
+        }
+        if (upgradeCount == 1)
+            emission.rateOverTime = 5f;
+        else if (upgradeCount == 2)
+            emission.rateOverTime = 50f;
+        else if (upgradeCount >= 3)
+            emission.rateOverTime = 100f;
+        else
+            emission.rateOverTime = 0f;
+    }
+
     void Update()
     {
         CheckButtonStatus();
+        UpdateParticleRate();
+
         if (!isOwned || currProductionPower <= 0f || fruitPrefab == null) return;
 
         fruitSpawnTimer += Time.deltaTime;
@@ -51,7 +74,7 @@ public class AppleTreeStation : MonoBehaviour
         {
             fruitSpawnTimer -= spawnInterval;
             SpawnFruit();
-        }
+        } 
     }
 
     void SpawnFruit()
@@ -82,6 +105,7 @@ public class AppleTreeStation : MonoBehaviour
                     treeVisual.mesh = treeLevels[0];
 
                 manager.generationRate += productionPowerChange;
+                manager.generatorCount++;
                 currProductionPower += productionPowerChange;
                 upgradeCount++;
                 price = Mathf.Round(cost * 2f);

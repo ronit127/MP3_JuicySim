@@ -9,6 +9,12 @@ public class AppleCalc : MonoBehaviour
     public float oranges;
     public float orangeGenerationRate;
 
+    [Header("Generator Planting")]
+    public float generatorCost = 25f;
+    public float generatorRateIncrease = 1f;
+    public int maxGenerators = 10;
+    public int generatorCount = 0;
+
     public TextMeshProUGUI textDisplay;
     public TextMeshProUGUI orangeTextDisplay;
 
@@ -46,6 +52,18 @@ public class AppleCalc : MonoBehaviour
             unlockButton.SetActive(unlockClicked || apples >= unlockCost);
 
         CheckAchievement(Mathf.FloorToInt(unlockClicked ? apples + oranges : apples));
+    }
+
+    public bool TryPlantGenerator()
+    {
+        if (generatorCount >= maxGenerators) return false;
+        if (apples < generatorCost) return false;
+
+        apples -= generatorCost;
+        generationRate += generatorRateIncrease;
+        generatorCount++;
+
+        return true;
     }
 
     void CheckAchievement(int fruit)

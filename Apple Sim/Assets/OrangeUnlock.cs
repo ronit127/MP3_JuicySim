@@ -11,6 +11,10 @@ public class OrangeUnlock : MonoBehaviour
     public Renderer gateRenderer;
     public Color unlockedColor = Color.green;
 
+    public AudioSource pickupAudioSource;
+    public float pickupSoundVolume = 1f;
+    public ParticleSystem unlockParticles;
+
     public bool unlocked = false;
 
     public void OnUnlockClicked()
@@ -26,6 +30,15 @@ public class OrangeUnlock : MonoBehaviour
             Invoke(nameof(ClearText), 45f);
 
             unlocked = true;
+
+            if (pickupAudioSource != null)
+            {
+                pickupAudioSource.volume = pickupSoundVolume;
+                pickupAudioSource.Play();
+            }
+
+            if (unlockParticles != null)
+                unlockParticles.Play();
 
             if (gateRenderer != null)
                 gateRenderer.material.color = unlockedColor;
