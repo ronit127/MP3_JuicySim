@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.XR;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine.UI;
 
@@ -31,6 +33,21 @@ public class AppleTreeStation : MonoBehaviour
     private const float MinSpawnInterval = 0.5f;
 
     public ParticleSystem particles;
+
+    public AudioSource clickerAudioSource;
+    public float clickerSoundVolume = 1f;
+
+    public AudioSource[] generatorAudioSources;
+    public float[] generatorSoundVolumes;
+
+    [Header("Generator Haptics")]
+    public bool enableGeneratorHaptics = true;
+    public float baseHapticAmplitude = 0.3f;
+    public float baseHapticDuration = 0.2f;
+    public float hapticLevelMultiplier = 0.2f;
+
+    [Header("Visual Effects")]
+    public ScaleEaser signScaleEaser;
 
     public void Start()
     {
@@ -109,6 +126,15 @@ public class AppleTreeStation : MonoBehaviour
                 currProductionPower += productionPowerChange;
                 upgradeCount++;
                 price = Mathf.Round(cost * 2f);
+
+                PlayGeneratorSound(upgradeCount);
+                PlayGeneratorHaptics(upgradeCount);
+
+                // Trigger visual scale effect
+                if (signScaleEaser != null)
+                {
+                    signScaleEaser.TriggerScaleEffect();
+                }
             }
             else
             {
@@ -119,6 +145,15 @@ public class AppleTreeStation : MonoBehaviour
                     currProductionPower += productionPowerChange;
                     upgradeCount++;
                     price = Mathf.Round(price * 1.5f);
+
+                    PlayGeneratorSound(upgradeCount);
+                    PlayGeneratorHaptics(upgradeCount);
+
+                    // Trigger visual scale effect
+                    if (signScaleEaser != null)
+                    {
+                        signScaleEaser.TriggerScaleEffect();
+                    }
                 }
             }
 
@@ -139,6 +174,50 @@ public class AppleTreeStation : MonoBehaviour
         if (Time.time - lastClickTime < clickCooldown) return;
         lastClickTime = Time.time;
         manager.apples += clickerRate;
+
+        // Play sound on manual click
+        if (clickerAudioSource != null)
+        {
+            clickerAudioSource.volume = clickerSoundVolume;
+            clickerAudioSource.Play();
+        }
+    }
+
+    void PlayGeneratorSound(int generatorLevel)
+    {
+        if (generatorAudioSources == null || generatorAudioSources.Length == 0) return;
+        if (generatorSoundVolumes == null || generatorSoundVolumes.Length == 0) return;
+
+        // Map generator levels to sound indices: level 1 = index 0, level 2 = index 1, level 3 = index 2
+        int soundIndex = Mathf.Min(generatorLevel - 1, generatorAudioSources.Length - 1);
+
+        if (soundIndex >= 0 && soundIndex < generatorAudioSources.Length && generatorAudioSources[soundIndex] != null)
+        {
+            generatorAudioSources[soundIndex].volume = (soundIndex < generatorSoundVolumes.Length) ? generatorSoundVolumes[soundIndex] : 1f;
+            generatorAudioSources[soundIndex].Play();
+        }
+    }
+
+    void PlayGeneratorHaptics(int generatorLevel)
+    {
+        if (!enableGeneratorHaptics) return;
+
+        // Increase haptic intensity with generator level
+        float amplitude = Mathf.Min(baseHapticAmplitude + (generatorLevel - 1) * hapticLevelMultiplier, 1f);
+        float duration = baseHapticDuration + (generatorLevel - 1) * 0.1f;
+
+        var devices = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(
+            InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller,
+            devices);
+
+        foreach (var device in devices)
+        {
+            if (device.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+            {
+                device.SendHapticImpulse(0, amplitude, duration);
+            }
+        }
     }
 
     public void ApplyPowerUp(float multiplier)

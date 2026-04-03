@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using TMPro;
 
 public class AppleCalc : MonoBehaviour
@@ -87,6 +88,8 @@ public class AppleCalc : MonoBehaviour
             }
                 
             achievementLevel++;
+
+            // Trophy activation will handle haptics
         }
     }
 
